@@ -5,4 +5,8 @@ import { Component } from '@angular/core';
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.scss'],
 })
-export default class DashboardComponent {}
+export default class DashboardComponent {
+    public generatePdf() {
+        console.log('generating');
+    }
+}

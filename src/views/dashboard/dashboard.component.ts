@@ -1,6 +1,6 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
 import { makePdf } from '../../utils/pdf-maker';
-import { Product } from './models';
+import { Product, Invoice } from './models';
 import { fetchProducts } from './data';
 
 @Component({
@@ -13,16 +13,64 @@ export default class DashboardComponent {
 
     public async generatePdf() {
         const products = await fetchProducts().toPromise();
-
-        const productRows = products.map(toProductRow);
-        const taxRows = toTaxTable(products);
-
-        const dd = makedd(productRows, taxRows);
+        const invoice = toInvoice(products);
+        const dd = makedd(invoice);
         makePdf(dd).download();
     }
 }
 
-const makedd = (productRows, taxRows) => ({
+const toInvoice = (products: Product[]): Invoice => {
+    const toInvoiceProduct = (product: Product, index: number) => {
+        const { name, unit, quantity, unitNetValue, taxRate } = product;
+        const no = index + 1;
+        const totalNetValue = unitNetValue * quantity;
+        const totalTaxValue = totalNetValue * taxRate;
+        const totalGrossValue = totalNetValue + totalTaxValue;
+
+        return {
+            no,
+            name,
+            unit,
+            quantity,
+            unitNetValue,
+            totalNetValue,
+            taxRate,
+            totalGrossValue,
+        };
+    };
+
+    /* Find unique tax values within product list */
+    const distinctTaxValues = [
+        ...new Set(products.map(product => product.taxRate)),
+    ];
+
+    /* Make array where each element represents group of products with the same tax value */
+    const productsSortedByTax = distinctTaxValues.map(tax =>
+        products.filter(product => tax.equals(product.taxRate)),
+    );
+
+    /* Accumulate total net, tax, and gross of products for particular tax value */
+    const taxRatesSummary = productsSortedByTax.map(items => {
+        const taxRate = items[0].taxRate;
+        const netValue = items
+            .map(({ unitNetValue, quantity }) => unitNetValue * quantity)
+            .reduce((prev, curr) => prev + curr, 0);
+        const taxValue = netValue * taxRate;
+        const grossValue = netValue + taxValue;
+
+        return { taxRate, netValue, taxValue, grossValue };
+    });
+
+    return {
+        products: products.map(toInvoiceProduct),
+        taxRatesSummary,
+        totalNetValue: taxRatesSummary.map(item => item.netValue).sum(),
+        totalTaxValue: taxRatesSummary.map(item => item.taxValue).sum(),
+        totalGrossValue: taxRatesSummary.map(item => item.grossValue).sum(),
+    };
+};
+
+const makedd = (invoice: Invoice) => ({
     content: [
         {
             columns: [
@@ -95,7 +143,16 @@ const makedd = (productRows, taxRows) => ({
                         'Stawka VAT',
                         'Wartość brutto',
                     ],
-                    ...productRows,
+                    ...invoice.products.map(item => [
+                        item.no,
+                        item.name,
+                        item.unit,
+                        item.quantity,
+                        item.unitNetValue.toCurrency(),
+                        item.totalNetValue.toCurrency(),
+                        item.taxRate.toPercent(),
+                        item.totalGrossValue.toCurrency(),
+                    ]),
                 ],
             },
         },
@@ -114,7 +171,18 @@ const makedd = (productRows, taxRows) => ({
                         'Kwota VAT',
                         'Wartość brutto',
                     ],
-                    ...taxRows,
+                    ...invoice.taxRatesSummary.map(item => [
+                        item.taxRate.toPercent(),
+                        item.netValue.toCurrency(),
+                        item.taxValue.toCurrency(),
+                        item.grossValue.toCurrency(),
+                    ]),
+                    [
+                        'Razem',
+                        invoice.totalNetValue.toCurrency(),
+                        invoice.totalTaxValue.toCurrency(),
+                        invoice.totalGrossValue.toCurrency(),
+                    ],
                 ],
             },
         },
@@ -123,68 +191,3 @@ const makedd = (productRows, taxRows) => ({
         fontSize: 10,
     },
 });
-
-const toProductRow = (product: Product, index: number) => {
-    const { name, unit, quantity, netUnitPrice, tax } = product;
-    const lp = index + 1;
-    const netTotalPrice = netUnitPrice * quantity;
-    const taxPrice = netTotalPrice * tax;
-    const grossTotalPrice = netTotalPrice + taxPrice;
-
-    return [
-        lp,
-        name,
-        unit,
-        quantity,
-        netUnitPrice.toCurrency(),
-        netTotalPrice.toCurrency(),
-        tax.toPercent(),
-        grossTotalPrice.toCurrency(),
-    ];
-};
-
-const toTaxTable = (products: Product[]) => {
-    /* Find unique tax values within product list */
-    const distinctTaxValues = [
-        ...new Set(products.map(product => product.tax)),
-    ];
-
-    /* Make array where each element represents group of products with the same tax value */
-    const productsSortedByTax = distinctTaxValues.map(tax =>
-        products.filter(product => tax.equals(product.tax)),
-    );
-
-    /* Accumulate total net, tax, and gross of products for particular tax value */
-    const taxSummaryRows = productsSortedByTax.map(items => {
-        const tax = items[0].tax;
-        const netTotalPrice = items
-            .map(({ netUnitPrice, quantity }) => netUnitPrice * quantity)
-            .reduce((prev, curr) => prev + curr, 0);
-        const taxPrice = netTotalPrice * items[0].tax;
-        const grossTotalPrice = netTotalPrice + taxPrice;
-
-        return { tax, netTotalPrice, taxPrice, grossTotalPrice };
-    });
-
-    /* Helper function to calculate sum of given column */
-    const sum = (key: string) =>
-        taxSummaryRows
-            .map(item => item[key])
-            .reduce((prev, curr) => prev + curr, 0);
-
-    /* Build tax table from formatted strings */
-    return [
-        ...taxSummaryRows.map(item => [
-            item.tax.toPercent(),
-            item.netTotalPrice.toCurrency(),
-            item.taxPrice.toCurrency(),
-            item.grossTotalPrice.toCurrency(),
-        ]),
-        [
-            'Razem',
-            sum('netTotalPrice').toCurrency(),
-            sum('taxPrice').toCurrency(),
-            sum('grossTotalPrice').toCurrency(),
-        ],
-    ];
-};

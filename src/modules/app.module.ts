@@ -1,5 +1,8 @@
 import { NgModule } from '@angular/core';
 
+/* Prototype */
+import '../utils/number-prototypes';
+
 /* Imports */
 import { BrowserModule } from '@angular/platform-browser';
 import RoutingModule from './routing.module';

@@ -12,6 +12,10 @@ pdfMake.tableLayouts = {
     invoiceLayout: {
         fillColor: rowIndex => rowIndex === 0 && '#ededed',
     },
+    detailsLayout: {
+        hLineWidth: () => 0,
+        vLineWidth: () => 0,
+    },
 };
 
 export const makePdf = pdfMake.createPdf;

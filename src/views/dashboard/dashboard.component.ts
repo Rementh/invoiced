@@ -232,44 +232,55 @@ const makedd = (invoice: Invoice) => ({
         },
         {
             columns: [
-                {
-                    style: {
-                        fontSize: pdfConsts.fontSize.table,
-                        alignment: 'center',
-                    },
-                    layout: 'invoiceLayout',
-                    table: {
-                        headerRows: 1,
-                        widths: ['auto', 'auto', 'auto', 'auto'],
-                        body: [
-                            [
-                                'Stawka VAT',
-                                'Wartość netto',
-                                'Kwota VAT',
-                                'Wartość brutto',
-                            ],
-                            ...invoice.taxRatesSummary.map(item => [
-                                item.taxRate.toPercent(),
-                                item.netValue.toCurrency(),
-                                item.taxValue.toCurrency(),
-                                item.grossValue.toCurrency(),
-                            ]),
-                            [
-                                'Razem',
-                                invoice.totalNetValue.toCurrency(),
-                                invoice.totalTaxValue.toCurrency(),
-                                invoice.totalGrossValue.toCurrency(),
-                            ],
-                        ],
-                    },
-                },
                 [
-                    'Nabywca',
-                    'Development-as-a-Service Sp. z. o.o',
-                    'NIP: 5711719018',
-                    'Piaskowa 19',
-                    '13-200 Działdowo',
+                    {
+                        style: {
+                            fontSize: pdfConsts.fontSize.table,
+                            alignment: 'center',
+                        },
+                        layout: 'invoiceLayout',
+                        margin: [0, 0, 0, pdfConsts.margin],
+                        table: {
+                            headerRows: 1,
+                            widths: ['auto', 'auto', 'auto', 'auto'],
+                            body: [
+                                [
+                                    'Stawka VAT',
+                                    'Wartość netto',
+                                    'Kwota VAT',
+                                    'Wartość brutto',
+                                ],
+                                ...invoice.taxRatesSummary.map(item => [
+                                    item.taxRate.toPercent(),
+                                    item.netValue.toCurrency(),
+                                    item.taxValue.toCurrency(),
+                                    item.grossValue.toCurrency(),
+                                ]),
+                                [
+                                    'Razem',
+                                    invoice.totalNetValue.toCurrency(),
+                                    invoice.totalTaxValue.toCurrency(),
+                                    invoice.totalGrossValue.toCurrency(),
+                                ],
+                            ],
+                        },
+                    },
+                    {
+                        layout: 'detailsLayout',
+                        style: {
+                            fontSize: pdfConsts.fontSize.table,
+                        },
+                        table: {
+                            widths: ['auto', '*'],
+                            body: [
+                                ['Sposób płatności', 'przelew'],
+                                ['Termin płatności', '17-02-2020'],
+                                ['Numer konta', '06249000050000400024183585'],
+                            ],
+                        },
+                    },
                 ],
+                [],
             ],
             columnGap: pdfConsts.margin,
         },

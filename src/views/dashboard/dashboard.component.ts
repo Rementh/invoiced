@@ -70,56 +70,130 @@ const toInvoice = (products: Product[]): Invoice => {
     };
 };
 
+const pdfConsts = {
+    margin: 20,
+    fontSize: {
+        text: 11,
+        table: 9,
+        header: 20,
+    },
+    labelBackground: '#dedede',
+};
+
 const makedd = (invoice: Invoice) => ({
     content: [
         {
             columns: [
                 [],
                 [
-                    'Miejsce wystawienia',
-                    'Bielsko-Biała',
+                    {
+                        layout: 'companyLayout',
+                        table: {
+                            headerRows: 1,
+                            widths: ['*'],
+                            body: [
+                                [
+                                    {
+                                        text: 'Miejsce wystawienia',
+                                        style: {
+                                            alignment: 'center',
+                                        },
+                                    },
+                                ],
+                                ['Bielsko-Biała'],
+                            ],
+                        },
+                    },
                     ' ',
-                    'Data wystawienia',
-                    '03-02-2020',
+                    {
+                        layout: 'companyLayout',
+                        table: {
+                            headerRows: 1,
+                            widths: ['*'],
+                            body: [
+                                [
+                                    {
+                                        text: 'Data wystawienia',
+                                        style: {
+                                            alignment: 'center',
+                                        },
+                                    },
+                                ],
+                                ['03-02-2020'],
+                            ],
+                        },
+                    },
                 ],
             ],
-            columnGap: 30,
+            columnGap: pdfConsts.margin,
+            style: {
+                alignment: 'center',
+            },
         },
         ' ',
         {
             columns: [
-                [
-                    'Sprzedawca',
-                    'Solid Apps Filip Talaga',
-                    'NIP: 6462850150',
-                    'Jankowicka 52A',
-                    '43-100 Tychy',
-                ],
-                [
-                    'Nabywca',
-                    'Development-as-a-Service Sp. z. o.o',
-                    'NIP: 5711719018',
-                    'Piaskowa 19',
-                    '13-200 Działdowo',
-                ],
+                {
+                    layout: 'companyLayout',
+                    table: {
+                        headerRows: 1,
+                        widths: ['*'],
+                        body: [
+                            [
+                                {
+                                    text: 'Sprzedawca',
+                                    style: {
+                                        alignment: 'center',
+                                    },
+                                },
+                            ],
+                            ['Solid Apps Filip Talaga'],
+                            ['NIP: 6462850150'],
+                            ['Jankowicka 52A'],
+                            ['43-100 Tychy'],
+                        ],
+                    },
+                },
+                {
+                    layout: 'companyLayout',
+                    table: {
+                        headerRows: 1,
+                        widths: ['*'],
+                        body: [
+                            [
+                                {
+                                    text: 'Nabywca',
+                                    style: {
+                                        alignment: 'center',
+                                    },
+                                },
+                            ],
+                            ['Development-as-a-Service Sp. z. o.o'],
+                            ['NIP: 5711719018'],
+                            ['Piaskowa 19'],
+                            ['13-200 Działdowo'],
+                        ],
+                    },
+                },
             ],
-            columnGap: 30,
+            columnGap: pdfConsts.margin,
         },
         {
             text: 'Faktura VAT 01/03/2020',
             alignment: 'center',
             style: {
-                fontSize: 20,
+                fontSize: pdfConsts.fontSize.header,
                 bold: true,
             },
-            margin: [0, 20],
+            margin: [0, pdfConsts.margin],
         },
         {
             style: {
-                fontSize: 8,
+                fontSize: pdfConsts.fontSize.table,
                 alignment: 'center',
             },
-            margin: [0, 0, 0, 20],
+            margin: [0, 0, 0, pdfConsts.margin],
+            layout: 'invoiceLayout',
             table: {
                 headerRows: 1,
                 widths: [
@@ -157,37 +231,50 @@ const makedd = (invoice: Invoice) => ({
             },
         },
         {
-            style: {
-                fontSize: 8,
-                alignment: 'center',
-            },
-            table: {
-                headerRows: 1,
-                widths: ['auto', 'auto', 'auto', 'auto'],
-                body: [
-                    [
-                        'Stawka VAT',
-                        'Wartość netto',
-                        'Kwota VAT',
-                        'Wartość brutto',
-                    ],
-                    ...invoice.taxRatesSummary.map(item => [
-                        item.taxRate.toPercent(),
-                        item.netValue.toCurrency(),
-                        item.taxValue.toCurrency(),
-                        item.grossValue.toCurrency(),
-                    ]),
-                    [
-                        'Razem',
-                        invoice.totalNetValue.toCurrency(),
-                        invoice.totalTaxValue.toCurrency(),
-                        invoice.totalGrossValue.toCurrency(),
-                    ],
+            columns: [
+                {
+                    style: {
+                        fontSize: pdfConsts.fontSize.table,
+                        alignment: 'center',
+                    },
+                    layout: 'invoiceLayout',
+                    table: {
+                        headerRows: 1,
+                        widths: ['auto', 'auto', 'auto', 'auto'],
+                        body: [
+                            [
+                                'Stawka VAT',
+                                'Wartość netto',
+                                'Kwota VAT',
+                                'Wartość brutto',
+                            ],
+                            ...invoice.taxRatesSummary.map(item => [
+                                item.taxRate.toPercent(),
+                                item.netValue.toCurrency(),
+                                item.taxValue.toCurrency(),
+                                item.grossValue.toCurrency(),
+                            ]),
+                            [
+                                'Razem',
+                                invoice.totalNetValue.toCurrency(),
+                                invoice.totalTaxValue.toCurrency(),
+                                invoice.totalGrossValue.toCurrency(),
+                            ],
+                        ],
+                    },
+                },
+                [
+                    'Nabywca',
+                    'Development-as-a-Service Sp. z. o.o',
+                    'NIP: 5711719018',
+                    'Piaskowa 19',
+                    '13-200 Działdowo',
                 ],
-            },
+            ],
+            columnGap: pdfConsts.margin,
         },
     ],
     defaultStyle: {
-        fontSize: 10,
+        fontSize: pdfConsts.fontSize.text,
     },
 });

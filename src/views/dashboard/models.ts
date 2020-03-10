@@ -26,4 +26,8 @@ export interface Invoice {
     totalNetValue: number;
     totalTaxValue: number;
     totalGrossValue: number;
+    currency: string;
+    paymentMethod: string;
+    paymentDate: string;
+    accountNumber: string;
 }

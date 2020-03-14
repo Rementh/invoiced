@@ -1,26 +1,87 @@
-import { Component, ViewChild, ElementRef } from '@angular/core';
+import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { makePdf } from '../../utils/pdf-maker';
-import { Product, Invoice } from './models';
+import { Product, Invoice, EntryInvoiceData, ExchangeRate } from './models';
 import { fetchProducts } from './data';
 import * as moment from 'moment';
+
+const getCurrencyRate = async (
+    code: string,
+    paymentDate: Date,
+): Promise<ExchangeRate> => {
+    const date = moment(paymentDate).subtract(1, 'days');
+    const table = 'a';
+    const endDate = date.format('YYYY-MM-DD');
+    const startDate = date.subtract(7, 'days').format('YYYY-MM-DD');
+    const url = `https://api.nbp.pl/api/exchangerates/rates/${table}/${code}/${startDate}/${endDate}`;
+    const result = await fetch(url).then(res => res.json());
+
+    return { ...result.rates.reverse()[0], currency: 'PLN' };
+};
 
 @Component({
     selector: 'dashboard',
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.scss'],
 })
-export default class DashboardComponent {
+export default class DashboardComponent implements OnInit {
     @ViewChild('page') page: ElementRef;
+    private entryInvoiceData: EntryInvoiceData;
+
+    async ngOnInit() {
+        const dateOfIssue = new Date(
+            moment('03-02-2020', 'DD-MM-YYYY').toString(),
+        );
+        const currency = 'EUR';
+        const exchangeRate = await getCurrencyRate(currency, dateOfIssue);
+        console.log(exchangeRate);
+
+        this.entryInvoiceData = {
+            placeOfIssue: 'Bielsko-Biała',
+            dateOfIssue,
+            seller: {
+                name: 'Solid Apps Filip Talaga',
+                taxIdNumber: '6462850150',
+                address: {
+                    street: 'Jankowicka 52A',
+                    city: 'Tychy',
+                    postCode: '43-100',
+                },
+            },
+            buyer: {
+                name: 'Development-as-a-Service Sp. z. o.o',
+                taxIdNumber: '5711719018',
+                address: {
+                    street: 'Piaskowa 19',
+                    city: 'Działdowo',
+                    postCode: '13-200',
+                },
+            },
+            invoiceNumber: 1,
+            products: [
+                {
+                    name: 'Usługa programistyczna',
+                    unit: 'godz.',
+                    quantity: 104,
+                    unitNetValue: 26,
+                    taxRate: 0.23,
+                },
+            ],
+            currency,
+            paymentMethod: 'przelew',
+            paymentDeadlineInDays: 30,
+            accountNumber: '06 2490 0005 0000 4000 2418 3585',
+            exchangeRate,
+        };
+    }
 
     public async generatePdf() {
-        const products = await fetchProducts().toPromise();
-        const invoice = toInvoice(products);
-        const dd = makedd(invoice);
-        makePdf(dd).download();
+        const invoice = calculateInvoiceData(this.entryInvoiceData);
+        const designDoc = makeDesignDoc(invoice);
+        makePdf(designDoc).download();
     }
 }
 
-const toInvoice = (products: Product[]): Invoice => {
+const calculateInvoiceData = (entryInvoiceData: EntryInvoiceData): Invoice => {
     const toInvoiceProduct = (product: Product, index: number) => {
         const { name, unit, quantity, unitNetValue, taxRate } = product;
         const no = index + 1;
@@ -42,12 +103,14 @@ const toInvoice = (products: Product[]): Invoice => {
 
     /* Find unique tax values within product list */
     const distinctTaxValues = [
-        ...new Set(products.map(product => product.taxRate)),
+        ...new Set(entryInvoiceData.products.map(product => product.taxRate)),
     ];
 
     /* Make array where each element represents group of products with the same tax value */
     const productsSortedByTax = distinctTaxValues.map(tax =>
-        products.filter(product => tax.equals(product.taxRate)),
+        entryInvoiceData.products.filter(product =>
+            tax.equals(product.taxRate),
+        ),
     );
 
     /* Accumulate total net, tax, and gross of products for particular tax value */
@@ -62,54 +125,79 @@ const toInvoice = (products: Product[]): Invoice => {
         return { taxRate, netValue, taxValue, grossValue };
     });
 
+    /* Calculate total net, tax and gross values */
+    const grossValueTotal = taxRatesSummary.map(item => item.grossValue).sum();
+    const total = {
+        netValue: taxRatesSummary.map(item => item.netValue).sum(),
+        taxValue: taxRatesSummary.map(item => item.taxValue).sum(),
+        grossValue: grossValueTotal,
+        grossText: `---- ---- ---- ---- ${(
+            (grossValueTotal % 1) *
+            100
+        ).toDigits()}/100`,
+    };
+
+    /* Calculate total net, tax and gross values for the foreign exchange */
+    const totalExchanged = {
+        netValue: total.netValue * entryInvoiceData.exchangeRate.mid,
+        taxValue: total.taxValue * entryInvoiceData.exchangeRate.mid,
+        grossValue: total.grossValue * entryInvoiceData.exchangeRate.mid,
+    };
+
+    const {
+        invoiceNumber,
+        products,
+        paymentDeadlineInDays,
+        ...rest
+    } = entryInvoiceData;
+
     return {
-        placeOfIssue: 'Bielsko-Biała',
-        dateOfIssue: new Date(),
-        seller: {
-            name: 'Solid Apps Filip Talaga',
-            taxIdNumber: '6462850150',
-            address: {
-                street: 'Jankowicka 52A',
-                city: 'Tychy',
-                postCode: '43-100',
-            },
-        },
-        buyer: {
-            name: 'Development-as-a-Service Sp. z. o.o',
-            taxIdNumber: '5711719018',
-            address: {
-                street: 'Piaskowa 19',
-                city: 'Działdowo',
-                postCode: '13-200',
-            },
-        },
-        invoiceNumber: `01/${moment().format('MM/YYYY')}`,
-        products: products.map(toInvoiceProduct),
         taxRatesSummary,
-        totalNetValue: taxRatesSummary.map(item => item.netValue).sum(),
-        totalTaxValue: taxRatesSummary.map(item => item.taxValue).sum(),
-        totalGrossValue: taxRatesSummary.map(item => item.grossValue).sum(),
-        totalGrossText: 'trzy tysiące trzysta dwadzieścia pięć',
-        currency: 'EUR',
-        paymentMethod: 'przelew',
-        paymentDate: new Date(
-            moment()
-                .add(14, 'days')
+        total,
+        totalExchanged,
+        invoiceNumber: `${invoiceNumber.toDigits()}/${moment(
+            entryInvoiceData.dateOfIssue,
+        ).format('MM/YYYY')}`,
+        products: products.map(toInvoiceProduct),
+        paymentDeadline: new Date(
+            moment(entryInvoiceData.dateOfIssue)
+                .add(paymentDeadlineInDays, 'days')
                 .format(),
         ),
-        accountNumber: '06 2490 0005 0000 4000 2418 3585',
+        ...rest,
     };
 };
 
 const pdfConsts = {
     margin: 20,
     fontSize: {
+        upperColumns: 10,
         header: 20,
-        text: 9,
         table: 9,
+        totalPayment: 12,
+        exchangeRate: 10,
+        text: 9,
     },
     labelBackground: '#dedede',
 };
+
+const makeExchangeLine = (exchangeRate: ExchangeRate, currency: string) => [
+    `Przeliczono po kursie `,
+    {
+        text: `1 ${currency} = ${exchangeRate.mid.toCurrency({
+            precision: 4,
+            suffix: ` ${exchangeRate.currency}`,
+        })}`,
+        style: {
+            bold: true,
+            fontSize: pdfConsts.fontSize.exchangeRate,
+        },
+    },
+    `. Tabela kursów średnich NBP nr ${exchangeRate.no} z dnia ${moment(
+        exchangeRate.effectiveDate,
+        'YYYY-MM-DD',
+    ).format('DD-MM-YYYY')}`,
+];
 
 const makeColumn = (header: string, content: string[]) => [
     {
@@ -139,7 +227,7 @@ const makeColumn = (header: string, content: string[]) => [
     },
 ];
 
-const makedd = (invoice: Invoice) => ({
+const makeDesignDoc = (invoice: Invoice) => ({
     content: [
         {
             columns: [
@@ -153,6 +241,7 @@ const makedd = (invoice: Invoice) => ({
             ],
             columnGap: pdfConsts.margin,
             style: {
+                fontSize: pdfConsts.fontSize.upperColumns,
                 alignment: 'center',
             },
         },
@@ -172,6 +261,9 @@ const makedd = (invoice: Invoice) => ({
                 ]),
             ],
             columnGap: pdfConsts.margin,
+            style: {
+                fontSize: pdfConsts.fontSize.upperColumns,
+            },
         },
         {
             text: `Faktura VAT ${invoice.invoiceNumber}`,
@@ -268,9 +360,9 @@ const makedd = (invoice: Invoice) => ({
                                 [
                                     ...[
                                         'Razem',
-                                        invoice.totalNetValue.toCurrency(),
-                                        invoice.totalTaxValue.toCurrency(),
-                                        invoice.totalGrossValue.toCurrency(),
+                                        invoice.total.netValue.toCurrency(),
+                                        invoice.total.taxValue.toCurrency(),
+                                        invoice.total.grossValue.toCurrency(),
                                     ].map(text => ({
                                         text,
                                         style: {
@@ -289,7 +381,7 @@ const makedd = (invoice: Invoice) => ({
                                 ['Sposób płatności', invoice.paymentMethod],
                                 [
                                     'Termin płatności',
-                                    moment(invoice.paymentDate).format(
+                                    moment(invoice.paymentDeadline).format(
                                         'DD-MM-YYYY',
                                     ),
                                 ],
@@ -308,12 +400,14 @@ const makedd = (invoice: Invoice) => ({
                                         text: [
                                             'Do zapłaty: ',
                                             {
-                                                text: `${invoice.totalGrossValue.toCurrency()} ${
+                                                text: `${invoice.total.grossValue.toCurrency()} ${
                                                     invoice.currency
                                                 }`,
                                                 style: {
                                                     bold: true,
-                                                    fontSize: 12,
+                                                    fontSize:
+                                                        pdfConsts.fontSize
+                                                            .totalPayment,
                                                 },
                                             },
                                         ],
@@ -321,12 +415,19 @@ const makedd = (invoice: Invoice) => ({
                                 ],
                                 [
                                     {
-                                        text: `Słownie: ${invoice.totalGrossText} 92/100 ${invoice.currency}`,
+                                        text: `Słownie: ${invoice.total.grossText} ${invoice.currency}`,
                                         margin: [0, 0, 0, pdfConsts.margin],
                                     },
                                 ],
                                 [
-                                    `Przeliczono po kursie 1 EUR = 4,3010 PLN tabela kursów średnich NBP nr 021/A/NBP/2020 z dnia 31-01-2020`,
+                                    {
+                                        text: [
+                                            ...makeExchangeLine(
+                                                invoice.exchangeRate,
+                                                invoice.currency,
+                                            ),
+                                        ],
+                                    },
                                 ],
                             ],
                         },
@@ -338,24 +439,32 @@ const makedd = (invoice: Invoice) => ({
                             body: [
                                 [
                                     'Wartość netto',
-                                    `${invoice.totalNetValue.toCurrency()} ${
-                                        invoice.currency
-                                    }`,
-                                    '11 629,90 PLN',
+                                    invoice.total.netValue.toCurrency({
+                                        suffix: ` ${invoice.currency}`,
+                                    }),
+                                    invoice.totalExchanged.netValue.toCurrency({
+                                        suffix: ` ${invoice.exchangeRate.currency}`,
+                                    }),
                                 ],
                                 [
                                     'Kwota VAT',
-                                    `${invoice.totalTaxValue.toCurrency()} ${
-                                        invoice.currency
-                                    }`,
-                                    '2 674,88 PLN',
+                                    invoice.total.taxValue.toCurrency({
+                                        suffix: ` ${invoice.currency}`,
+                                    }),
+                                    invoice.totalExchanged.taxValue.toCurrency({
+                                        suffix: ` ${invoice.exchangeRate.currency}`,
+                                    }),
                                 ],
                                 [
                                     'Wartość brutto',
-                                    `${invoice.totalGrossValue.toCurrency()} ${
-                                        invoice.currency
-                                    }`,
-                                    '14 304,78 PLN',
+                                    invoice.total.grossValue.toCurrency({
+                                        suffix: ` ${invoice.currency}`,
+                                    }),
+                                    invoice.totalExchanged.grossValue.toCurrency(
+                                        {
+                                            suffix: ` ${invoice.exchangeRate.currency}`,
+                                        },
+                                    ),
                                 ],
                             ],
                         },

@@ -55,7 +55,7 @@ export const fetchProducts = (): Observable<Product[]> =>
         {
             name: 'Usługa programistyczna',
             unit: 'godz.',
-            quantity: 160,
+            quantity: 104,
             unitNetValue: 26,
             taxRate: 0.23,
         },

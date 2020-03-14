@@ -16,6 +16,33 @@ interface LegalEntity {
     };
 }
 
+export interface ExchangeRate {
+    no: string;
+    effectiveDate: string;
+    mid: number;
+    currency: string;
+}
+
+export interface EntryInvoiceData {
+    placeOfIssue: string;
+    dateOfIssue: Date;
+    seller: LegalEntity;
+    buyer: LegalEntity;
+    invoiceNumber: number;
+    products: {
+        name: string;
+        unit: string;
+        quantity: number;
+        unitNetValue: number;
+        taxRate: number;
+    }[];
+    currency: string;
+    paymentMethod: string;
+    paymentDeadlineInDays: number;
+    accountNumber: string;
+    exchangeRate: ExchangeRate;
+}
+
 export interface Invoice {
     placeOfIssue: string;
     dateOfIssue: Date;
@@ -38,12 +65,20 @@ export interface Invoice {
         taxValue: number;
         grossValue: number;
     }[];
-    totalNetValue: number;
-    totalTaxValue: number;
-    totalGrossValue: number;
-    totalGrossText: string;
+    total: {
+        netValue: number;
+        taxValue: number;
+        grossValue: number;
+        grossText: string;
+    };
     currency: string;
     paymentMethod: string;
-    paymentDate: Date;
+    paymentDeadline: Date;
     accountNumber: string;
+    exchangeRate: ExchangeRate;
+    totalExchanged: {
+        netValue: number;
+        taxValue: number;
+        grossValue: number;
+    };
 }

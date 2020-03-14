@@ -2,6 +2,7 @@ import { Component, ViewChild, ElementRef } from '@angular/core';
 import { makePdf } from '../../utils/pdf-maker';
 import { Product, Invoice } from './models';
 import { fetchProducts } from './data';
+import * as moment from 'moment';
 
 @Component({
     selector: 'dashboard',
@@ -62,14 +63,40 @@ const toInvoice = (products: Product[]): Invoice => {
     });
 
     return {
+        placeOfIssue: 'Bielsko-Biała',
+        dateOfIssue: new Date(),
+        seller: {
+            name: 'Solid Apps Filip Talaga',
+            taxIdNumber: '6462850150',
+            address: {
+                street: 'Jankowicka 52A',
+                city: 'Tychy',
+                postCode: '43-100',
+            },
+        },
+        buyer: {
+            name: 'Development-as-a-Service Sp. z. o.o',
+            taxIdNumber: '5711719018',
+            address: {
+                street: 'Piaskowa 19',
+                city: 'Działdowo',
+                postCode: '13-200',
+            },
+        },
+        invoiceNumber: `01/${moment().format('MM/YYYY')}`,
         products: products.map(toInvoiceProduct),
         taxRatesSummary,
         totalNetValue: taxRatesSummary.map(item => item.netValue).sum(),
         totalTaxValue: taxRatesSummary.map(item => item.taxValue).sum(),
         totalGrossValue: taxRatesSummary.map(item => item.grossValue).sum(),
+        totalGrossText: 'trzy tysiące trzysta dwadzieścia pięć',
         currency: 'EUR',
         paymentMethod: 'przelew',
-        paymentDate: '17-02-2020',
+        paymentDate: new Date(
+            moment()
+                .add(14, 'days')
+                .format(),
+        ),
         accountNumber: '06 2490 0005 0000 4000 2418 3585',
     };
 };
@@ -118,8 +145,10 @@ const makedd = (invoice: Invoice) => ({
             columns: [
                 [],
                 [
-                    makeColumn('Miejsce wystawienia', ['Bielsko-Biała']),
-                    makeColumn('Data wystawienia', ['03-02-2020']),
+                    makeColumn('Miejsce wystawienia', [invoice.placeOfIssue]),
+                    makeColumn('Data wystawienia', [
+                        moment(invoice.dateOfIssue).format('DD-MM-YYYY'),
+                    ]),
                 ],
             ],
             columnGap: pdfConsts.margin,
@@ -130,22 +159,22 @@ const makedd = (invoice: Invoice) => ({
         {
             columns: [
                 makeColumn('Sprzedawca', [
-                    'Solid Apps Filip Talaga',
-                    'NIP: 6462850150',
-                    'Jankowicka 52A',
-                    '43-100 Tychy',
+                    invoice.seller.name,
+                    `NIP: ${invoice.seller.taxIdNumber}`,
+                    invoice.seller.address.street,
+                    `${invoice.seller.address.postCode} ${invoice.seller.address.city}`,
                 ]),
                 makeColumn('Nabywca', [
-                    'Development-as-a-Service Sp. z. o.o',
-                    'NIP: 5711719018',
-                    'Piaskowa 19',
-                    '13-200 Działdowo',
+                    invoice.buyer.name,
+                    `NIP: ${invoice.buyer.taxIdNumber}`,
+                    invoice.buyer.address.street,
+                    `${invoice.buyer.address.postCode} ${invoice.buyer.address.city}`,
                 ]),
             ],
             columnGap: pdfConsts.margin,
         },
         {
-            text: 'Faktura VAT 01/03/2020',
+            text: `Faktura VAT ${invoice.invoiceNumber}`,
             alignment: 'center',
             style: {
                 fontSize: pdfConsts.fontSize.header,
@@ -258,11 +287,13 @@ const makedd = (invoice: Invoice) => ({
                             widths: ['auto', 'auto'],
                             body: [
                                 ['Sposób płatności', invoice.paymentMethod],
-                                ['Termin płatności', invoice.paymentDate],
                                 [
-                                    'Numer konta',
-                                    '06 2490 0005 0000 4000 2418 3585',
+                                    'Termin płatności',
+                                    moment(invoice.paymentDate).format(
+                                        'DD-MM-YYYY',
+                                    ),
                                 ],
+                                ['Numer konta', invoice.accountNumber],
                             ],
                         },
                     },
@@ -290,8 +321,7 @@ const makedd = (invoice: Invoice) => ({
                                 ],
                                 [
                                     {
-                                        text:
-                                            'Słownie: trzy tysiące trzysta dwadzieścia pięć 92/100 EUR',
+                                        text: `Słownie: ${invoice.totalGrossText} 92/100 ${invoice.currency}`,
                                         margin: [0, 0, 0, pdfConsts.margin],
                                     },
                                 ],

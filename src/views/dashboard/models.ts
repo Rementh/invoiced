@@ -6,7 +6,22 @@ export interface Product {
     taxRate: number;
 }
 
+interface LegalEntity {
+    name: string;
+    taxIdNumber: string;
+    address: {
+        street: string;
+        city: string;
+        postCode: string;
+    };
+}
+
 export interface Invoice {
+    placeOfIssue: string;
+    dateOfIssue: Date;
+    seller: LegalEntity;
+    buyer: LegalEntity;
+    invoiceNumber: string;
     products: {
         no: number;
         name: string;
@@ -26,8 +41,9 @@ export interface Invoice {
     totalNetValue: number;
     totalTaxValue: number;
     totalGrossValue: number;
+    totalGrossText: string;
     currency: string;
     paymentMethod: string;
-    paymentDate: string;
+    paymentDate: Date;
     accountNumber: string;
 }

@@ -1,7 +1,6 @@
 import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { makePdf } from '../../utils/pdf-maker';
 import { Product, Invoice, EntryInvoiceData, ExchangeRate } from './models';
-import { fetchProducts } from './data';
 import * as moment from 'moment';
 
 const getCurrencyRate = async (

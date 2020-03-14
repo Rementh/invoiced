@@ -59,6 +59,55 @@ export default class DashboardComponent implements OnInit {
             invoiceNumber: 1,
             products: [
                 {
+                    name: 'Monitoring antywłamaniowy',
+                    unit: 'szt.',
+                    quantity: 1,
+                    unitNetValue: 16.67,
+                    taxRate: 0.23,
+                },
+                {
+                    name: 'Internet światłowód',
+                    unit: 'szt.',
+                    quantity: 1,
+                    unitNetValue: 40,
+                    taxRate: 0.23,
+                },
+                {
+                    name: 'Gaz',
+                    unit: 'szt.',
+                    quantity: 1,
+                    unitNetValue: 179.61,
+                    taxRate: 0.23,
+                },
+                {
+                    name: 'Energia elektryczna wspólna',
+                    unit: 'szt.',
+                    quantity: 1,
+                    unitNetValue: 8.22,
+                    taxRate: 0.23,
+                },
+                {
+                    name: 'Energia elektryczna własna',
+                    unit: 'szt.',
+                    quantity: 1,
+                    unitNetValue: 179.3,
+                    taxRate: 0.23,
+                },
+                {
+                    name: 'Dostarczanie wody',
+                    unit: 'szt.',
+                    quantity: 1,
+                    unitNetValue: 63.36,
+                    taxRate: 0.08,
+                },
+                {
+                    name: 'Odprowadzanie ścieków',
+                    unit: 'szt.',
+                    quantity: 1,
+                    unitNetValue: 58.14,
+                    taxRate: 0.08,
+                },
+                {
                     name: 'Usługa programistyczna',
                     unit: 'godz.',
                     quantity: 104,
@@ -174,7 +223,7 @@ const pdfConsts = {
         upperColumns: 10,
         header: 20,
         table: 9,
-        totalPayment: 12,
+        totalPayment: 11,
         exchangeRate: 10,
         text: 9,
     },
@@ -311,16 +360,28 @@ const makeDesignDoc = (invoice: Invoice) => ({
                             },
                         })),
                     ],
-                    ...invoice.products.map(item => [
-                        item.no,
-                        item.name,
-                        item.unit,
-                        item.quantity,
-                        item.unitNetValue.toCurrency(),
-                        item.totalNetValue.toCurrency(),
-                        item.taxRate.toPercent(),
-                        item.totalGrossValue.toCurrency(),
-                    ]),
+                    ...invoice.products.map(item =>
+                        [
+                            item.no,
+                            item.name,
+                            item.unit,
+                            item.quantity,
+                            item.unitNetValue.toCurrency(),
+                            item.totalNetValue.toCurrency(),
+                            item.taxRate.toPercent(),
+                            item.totalGrossValue.toCurrency(),
+                        ].map((text, index) => ({
+                            text,
+                            style: {
+                                alignment:
+                                    index === 1
+                                        ? 'left'
+                                        : index === 2
+                                        ? 'center'
+                                        : 'right',
+                            },
+                        })),
+                    ),
                 ],
             },
         },
@@ -353,9 +414,18 @@ const makeDesignDoc = (invoice: Invoice) => ({
                                 ],
                                 ...invoice.taxRatesSummary.map(item => [
                                     item.taxRate.toPercent(),
-                                    item.netValue.toCurrency(),
-                                    item.taxValue.toCurrency(),
-                                    item.grossValue.toCurrency(),
+                                    {
+                                        text: item.netValue.toCurrency(),
+                                        style: { alignment: 'right' },
+                                    },
+                                    {
+                                        text: item.taxValue.toCurrency(),
+                                        style: { alignment: 'right' },
+                                    },
+                                    {
+                                        text: item.grossValue.toCurrency(),
+                                        style: { alignment: 'right' },
+                                    },
                                 ]),
                                 [
                                     ...[
@@ -363,10 +433,14 @@ const makeDesignDoc = (invoice: Invoice) => ({
                                         invoice.total.netValue.toCurrency(),
                                         invoice.total.taxValue.toCurrency(),
                                         invoice.total.grossValue.toCurrency(),
-                                    ].map(text => ({
+                                    ].map((text, index) => ({
                                         text,
                                         style: {
                                             bold: true,
+                                            alignment:
+                                                index === 0
+                                                    ? 'center'
+                                                    : 'right',
                                         },
                                     })),
                                 ],
@@ -416,7 +490,6 @@ const makeDesignDoc = (invoice: Invoice) => ({
                                 [
                                     {
                                         text: `Słownie: ${invoice.total.grossText} ${invoice.currency}`,
-                                        margin: [0, 0, 0, pdfConsts.margin],
                                     },
                                 ],
                                 [
@@ -426,6 +499,12 @@ const makeDesignDoc = (invoice: Invoice) => ({
                                                 invoice.exchangeRate,
                                                 invoice.currency,
                                             ),
+                                        ],
+                                        margin: [
+                                            0,
+                                            pdfConsts.margin * 0.25,
+                                            0,
+                                            pdfConsts.margin * 0.25,
                                         ],
                                     },
                                 ],
@@ -439,32 +518,72 @@ const makeDesignDoc = (invoice: Invoice) => ({
                             body: [
                                 [
                                     'Wartość netto',
-                                    invoice.total.netValue.toCurrency({
-                                        suffix: ` ${invoice.currency}`,
-                                    }),
-                                    invoice.totalExchanged.netValue.toCurrency({
-                                        suffix: ` ${invoice.exchangeRate.currency}`,
-                                    }),
+                                    {
+                                        text: invoice.total.netValue.toCurrency(
+                                            {
+                                                suffix: ` ${invoice.currency}`,
+                                            },
+                                        ),
+                                        style: {
+                                            alignment: 'right',
+                                        },
+                                    },
+                                    {
+                                        text: invoice.totalExchanged.netValue.toCurrency(
+                                            {
+                                                suffix: ` ${invoice.exchangeRate.currency}`,
+                                            },
+                                        ),
+                                        style: {
+                                            alignment: 'right',
+                                        },
+                                    },
                                 ],
                                 [
                                     'Kwota VAT',
-                                    invoice.total.taxValue.toCurrency({
-                                        suffix: ` ${invoice.currency}`,
-                                    }),
-                                    invoice.totalExchanged.taxValue.toCurrency({
-                                        suffix: ` ${invoice.exchangeRate.currency}`,
-                                    }),
+                                    {
+                                        text: invoice.total.taxValue.toCurrency(
+                                            {
+                                                suffix: ` ${invoice.currency}`,
+                                            },
+                                        ),
+                                        style: {
+                                            alignment: 'right',
+                                        },
+                                    },
+                                    {
+                                        text: invoice.totalExchanged.taxValue.toCurrency(
+                                            {
+                                                suffix: ` ${invoice.exchangeRate.currency}`,
+                                            },
+                                        ),
+                                        style: {
+                                            alignment: 'right',
+                                        },
+                                    },
                                 ],
                                 [
                                     'Wartość brutto',
-                                    invoice.total.grossValue.toCurrency({
-                                        suffix: ` ${invoice.currency}`,
-                                    }),
-                                    invoice.totalExchanged.grossValue.toCurrency(
-                                        {
-                                            suffix: ` ${invoice.exchangeRate.currency}`,
+                                    {
+                                        text: invoice.total.grossValue.toCurrency(
+                                            {
+                                                suffix: ` ${invoice.currency}`,
+                                            },
+                                        ),
+                                        style: {
+                                            alignment: 'right',
                                         },
-                                    ),
+                                    },
+                                    {
+                                        text: invoice.totalExchanged.grossValue.toCurrency(
+                                            {
+                                                suffix: ` ${invoice.exchangeRate.currency}`,
+                                            },
+                                        ),
+                                        style: {
+                                            alignment: 'right',
+                                        },
+                                    },
                                 ],
                             ],
                         },

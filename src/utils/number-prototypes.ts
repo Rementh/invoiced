@@ -1,8 +1,13 @@
 interface Number {
     toRounded: (precision?: number) => {};
-    toCurrency: (symbol?: { prefix?: string; suffix?: string }) => {};
+    toCurrency: (symbol?: {
+        prefix?: string;
+        suffix?: string;
+        precision?: number;
+    }) => {};
     toPercent: () => {};
     equals: (match: number, precision?: number) => boolean;
+    toDigits: (precision?: number) => {};
 }
 
 /*******************************************************************/
@@ -21,10 +26,10 @@ Number.prototype.toRounded = function(precision = 2) {
 /* 123 => toCurrency({prefix: '€'}) => "€123,00"                   */
 /* 123 => toCurrency({suffix: ' zł'}) => "123,00 zł"               */
 /*******************************************************************/
-Number.prototype.toCurrency = function({ prefix, suffix } = {}) {
+Number.prototype.toCurrency = function({ prefix, suffix, precision } = {}) {
     return (
         (prefix ? `${prefix}` : '') +
-        this.toRounded().replace('.', ',') +
+        this.toRounded(precision).replace('.', ',') +
         (suffix ? `${suffix}` : '')
     );
 };
@@ -39,10 +44,23 @@ Number.prototype.toPercent = function() {
 };
 
 /*******************************************************************/
-/*  0.23 => equals(0.23) => true                                   */
+/* 0.23 => equals(0.23) => true                                   */
 /* 0.231 => equals(0.234) => true                                  */
 /* 0.231 => equals(0.234, 3) => false                              */
 /*******************************************************************/
 Number.prototype.equals = function(match: number, precision = 2): boolean {
     return this.toRounded(precision) === match.toRounded(precision);
+};
+
+/*******************************************************************/
+/* 1 => toDigits() => '01'                                         */
+/* 123.456 => toDigits() => '123'                                  */
+/* 123.456 => toDigits(5) => '00123'                               */
+/*******************************************************************/
+Number.prototype.toDigits = function(minDigits = 2) {
+    const digits = this.toRounded(0);
+    const missingDigits = minDigits - digits.length;
+    return missingDigits > 0
+        ? `${new Array(missingDigits).fill('0').join('')}${digits}`
+        : digits;
 };

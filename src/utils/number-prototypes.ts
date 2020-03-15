@@ -1,13 +1,13 @@
 interface Number {
-    toRounded: (precision?: number) => {};
+    toRounded: (precision?: number) => string;
     toCurrency: (symbol?: {
         prefix?: string;
         suffix?: string;
         precision?: number;
-    }) => {};
-    toPercent: () => {};
+    }) => string;
+    toPercent: () => string;
     equals: (match: number, precision?: number) => boolean;
-    toDigits: (precision?: number) => {};
+    toDigits: (precision?: number) => string;
 }
 
 /*******************************************************************/

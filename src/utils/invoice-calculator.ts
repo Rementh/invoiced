@@ -1,5 +1,6 @@
 import { EntryInvoiceData, Invoice, Product } from 'src/views/dashboard/models';
 import * as moment from 'moment';
+import numberToWords from './number-to-words-converter';
 
 const calculateInvoiceData = (entryInvoiceData: EntryInvoiceData): Invoice => {
     const toInvoiceProduct = (product: Product, index: number) => {
@@ -51,7 +52,7 @@ const calculateInvoiceData = (entryInvoiceData: EntryInvoiceData): Invoice => {
         netValue: taxRatesSummary.map(item => item.netValue).sum(),
         taxValue: taxRatesSummary.map(item => item.taxValue).sum(),
         grossValue: grossValueTotal,
-        grossText: `---- ---- ---- ---- ${(
+        grossText: `${numberToWords(Math.floor(grossValueTotal))} ${(
             (grossValueTotal % 1) *
             100
         ).toDigits()}/100`,

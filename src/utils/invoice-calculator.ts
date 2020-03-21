@@ -1,6 +1,6 @@
-import { EntryInvoiceData, Invoice, Product } from 'src/views/dashboard/models';
 import * as moment from 'moment';
 import numberToWords from './number-to-words-converter';
+import { EntryInvoiceData, Invoice, Product } from 'src/models/invoice';
 
 const calculateInvoiceData = (entryInvoiceData: EntryInvoiceData): Invoice => {
     const toInvoiceProduct = (product: Product, index: number) => {

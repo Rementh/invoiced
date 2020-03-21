@@ -1,0 +1,12 @@
+<svg class="svg" [class.loading]="isLoading">
+    <circle cx="50%" cy="50%" r="22" />
+</svg>
+<button
+    [class.loading]="isLoading"
+    class="button"
+    (click)="handleClick()"
+    [disabled]="isLoading"
+></button>
+<p class="label" [class.loading]="isLoading">
+    {{ label }}
+</p>

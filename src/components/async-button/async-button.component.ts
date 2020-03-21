@@ -3,10 +3,10 @@ import { wait, now } from 'src/utils/time';
 
 @Component({
     selector: 'async-button',
-    templateUrl: './button.component.html',
-    styleUrls: ['./button.component.scss'],
+    templateUrl: './async-button.component.html',
+    styleUrls: ['./async-button.component.scss'],
 })
-export default class ButtonComponent {
+export default class AsyncButtonComponent {
     private minDelay = 400;
     public isLoading = false;
 

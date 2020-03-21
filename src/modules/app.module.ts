@@ -12,9 +12,10 @@ import RoutingModule from './routing.module';
 /* Declarations */
 import AppComponent from '../views/app/app.component';
 import DashboardComponent from '../views/dashboard/dashboard.component';
+import ButtonComponent from '../components/button/button.component';
 
 @NgModule({
-    declarations: [AppComponent, DashboardComponent],
+    declarations: [AppComponent, DashboardComponent, ButtonComponent],
     imports: [BrowserModule, RoutingModule],
     providers: [],
     bootstrap: [AppComponent],

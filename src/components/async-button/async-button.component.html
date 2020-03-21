@@ -5,6 +5,7 @@
     [class.loading]="isLoading"
     class="button"
     (click)="handleClick()"
+    [disabled]="isLoading"
 ></button>
 <p class="label" [class.loading]="isLoading">
     {{ label }}

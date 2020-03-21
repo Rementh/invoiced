@@ -1,5 +1,5 @@
-import { ExchangeRate, Invoice } from 'src/views/dashboard/models';
 import * as moment from 'moment';
+import { ExchangeRate, Invoice } from 'src/models/invoice';
 
 const pdfConsts = {
     margin: 20,

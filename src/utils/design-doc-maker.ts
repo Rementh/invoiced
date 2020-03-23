@@ -18,7 +18,7 @@ const renderIf = (content: () => {} | [], condition: boolean) =>
     condition ? [content()] : [];
 
 const makeExchangeLine = (exchangeRate: ExchangeRate, currency: string) => [
-    `Przeliczono po kursie `,
+    'Przeliczono po kursie ',
     {
         text: `1 ${currency} = ${exchangeRate.mid.toCurrency({
             precision: 4,

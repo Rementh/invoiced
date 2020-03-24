@@ -40,7 +40,7 @@ export interface EntryInvoiceData {
     paymentMethod: string;
     paymentDeadlineInDays: number;
     accountNumber: string;
-    exchangeRate: ExchangeRate;
+    exchangeRate?: ExchangeRate;
 }
 
 export interface Invoice {
@@ -75,8 +75,8 @@ export interface Invoice {
     paymentMethod: string;
     paymentDeadline: Date;
     accountNumber: string;
-    exchangeRate: ExchangeRate;
-    totalExchanged: {
+    exchangeRate?: ExchangeRate;
+    totalExchanged?: {
         netValue: number;
         taxValue: number;
         grossValue: number;

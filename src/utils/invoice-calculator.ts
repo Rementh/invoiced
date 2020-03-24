@@ -58,24 +58,29 @@ const calculateInvoiceData = (entryInvoiceData: EntryInvoiceData): Invoice => {
         ).toDigits()}/100`,
     };
 
-    /* Calculate total net, tax and gross values for the foreign exchange */
-    const totalExchanged = {
-        netValue: total.netValue * entryInvoiceData.exchangeRate.mid,
-        taxValue: total.taxValue * entryInvoiceData.exchangeRate.mid,
-        grossValue: total.grossValue * entryInvoiceData.exchangeRate.mid,
-    };
-
     const {
         invoiceNumber,
         products,
         paymentDeadlineInDays,
+        exchangeRate,
         ...rest
     } = entryInvoiceData;
+
+    /* Calculate total net, tax and gross values for the foreign exchange */
+    const exchangeProps = exchangeRate
+        ? {
+              exchangeRate,
+              totalExchanged: {
+                  netValue: total.netValue * exchangeRate.mid,
+                  taxValue: total.taxValue * exchangeRate.mid,
+                  grossValue: total.grossValue * exchangeRate.mid,
+              },
+          }
+        : {};
 
     return {
         taxRatesSummary,
         total,
-        totalExchanged,
         invoiceNumber: `${invoiceNumber.toDigits()}/${moment(
             entryInvoiceData.dateOfIssue,
         ).format('MM/YYYY')}`,
@@ -85,6 +90,7 @@ const calculateInvoiceData = (entryInvoiceData: EntryInvoiceData): Invoice => {
                 .add(paymentDeadlineInDays, 'days')
                 .format(),
         ),
+        ...exchangeProps,
         ...rest,
     };
 };

@@ -14,8 +14,11 @@ const pdfConsts = {
     labelBackground: '#dedede',
 };
 
+const renderIf = (content: () => {} | [], condition: boolean) =>
+    condition ? [content()] : [];
+
 const makeExchangeLine = (exchangeRate: ExchangeRate, currency: string) => [
-    `Przeliczono po kursie `,
+    'Przeliczono po kursie ',
     {
         text: `1 ${currency} = ${exchangeRate.mid.toCurrency({
             precision: 4,
@@ -276,102 +279,108 @@ const makeDesignDoc = (invoice: Invoice) => ({
                                         text: `Słownie: ${invoice.total.grossText} ${invoice.currency}`,
                                     },
                                 ],
-                                [
-                                    {
-                                        text: [
-                                            ...makeExchangeLine(
-                                                invoice.exchangeRate,
-                                                invoice.currency,
+                                ...renderIf(
+                                    () => [
+                                        {
+                                            text: [
+                                                ...makeExchangeLine(
+                                                    invoice.exchangeRate,
+                                                    invoice.currency,
+                                                ),
+                                            ],
+                                            margin: [
+                                                0,
+                                                pdfConsts.margin * 0.25,
+                                                0,
+                                                pdfConsts.margin * 0.25,
+                                            ],
+                                        },
+                                    ],
+                                    !!invoice.exchangeRate,
+                                ),
+                            ],
+                        },
+                    },
+                    ...renderIf(
+                        () => ({
+                            layout: 'detailsLayout',
+                            table: {
+                                widths: ['*', '*', '*'],
+                                body: [
+                                    [
+                                        'Wartość netto',
+                                        {
+                                            text: invoice.total.netValue.toCurrency(
+                                                {
+                                                    suffix: ` ${invoice.currency}`,
+                                                },
                                             ),
-                                        ],
-                                        margin: [
-                                            0,
-                                            pdfConsts.margin * 0.25,
-                                            0,
-                                            pdfConsts.margin * 0.25,
-                                        ],
-                                    },
+                                            style: {
+                                                alignment: 'right',
+                                            },
+                                        },
+                                        {
+                                            text: invoice.totalExchanged.netValue.toCurrency(
+                                                {
+                                                    suffix: ` ${invoice.exchangeRate.currency}`,
+                                                },
+                                            ),
+                                            style: {
+                                                alignment: 'right',
+                                            },
+                                        },
+                                    ],
+                                    [
+                                        'Kwota VAT',
+                                        {
+                                            text: invoice.total.taxValue.toCurrency(
+                                                {
+                                                    suffix: ` ${invoice.currency}`,
+                                                },
+                                            ),
+                                            style: {
+                                                alignment: 'right',
+                                            },
+                                        },
+                                        {
+                                            text: invoice.totalExchanged.taxValue.toCurrency(
+                                                {
+                                                    suffix: ` ${invoice.exchangeRate.currency}`,
+                                                },
+                                            ),
+                                            style: {
+                                                alignment: 'right',
+                                            },
+                                        },
+                                    ],
+                                    [
+                                        'Wartość brutto',
+                                        {
+                                            text: invoice.total.grossValue.toCurrency(
+                                                {
+                                                    suffix: ` ${invoice.currency}`,
+                                                },
+                                            ),
+                                            style: {
+                                                alignment: 'right',
+                                            },
+                                        },
+                                        {
+                                            text: invoice.totalExchanged.grossValue.toCurrency(
+                                                {
+                                                    suffix: ` ${invoice.exchangeRate.currency}`,
+                                                },
+                                            ),
+                                            style: {
+                                                alignment: 'right',
+                                            },
+                                        },
+                                    ],
                                 ],
-                            ],
-                        },
-                    },
-                    {
-                        layout: 'detailsLayout',
-                        table: {
-                            widths: ['*', '*', '*'],
-                            body: [
-                                [
-                                    'Wartość netto',
-                                    {
-                                        text: invoice.total.netValue.toCurrency(
-                                            {
-                                                suffix: ` ${invoice.currency}`,
-                                            },
-                                        ),
-                                        style: {
-                                            alignment: 'right',
-                                        },
-                                    },
-                                    {
-                                        text: invoice.totalExchanged.netValue.toCurrency(
-                                            {
-                                                suffix: ` ${invoice.exchangeRate.currency}`,
-                                            },
-                                        ),
-                                        style: {
-                                            alignment: 'right',
-                                        },
-                                    },
-                                ],
-                                [
-                                    'Kwota VAT',
-                                    {
-                                        text: invoice.total.taxValue.toCurrency(
-                                            {
-                                                suffix: ` ${invoice.currency}`,
-                                            },
-                                        ),
-                                        style: {
-                                            alignment: 'right',
-                                        },
-                                    },
-                                    {
-                                        text: invoice.totalExchanged.taxValue.toCurrency(
-                                            {
-                                                suffix: ` ${invoice.exchangeRate.currency}`,
-                                            },
-                                        ),
-                                        style: {
-                                            alignment: 'right',
-                                        },
-                                    },
-                                ],
-                                [
-                                    'Wartość brutto',
-                                    {
-                                        text: invoice.total.grossValue.toCurrency(
-                                            {
-                                                suffix: ` ${invoice.currency}`,
-                                            },
-                                        ),
-                                        style: {
-                                            alignment: 'right',
-                                        },
-                                    },
-                                    {
-                                        text: invoice.totalExchanged.grossValue.toCurrency(
-                                            {
-                                                suffix: ` ${invoice.exchangeRate.currency}`,
-                                            },
-                                        ),
-                                        style: {
-                                            alignment: 'right',
-                                        },
-                                    },
-                                ],
-                            ],
-                        },
-                    },
+                            },
+                        }),
+                        !!invoice.exchangeRate,
+                    ),
                 ],
             ],
             columnGap: pdfConsts.margin,

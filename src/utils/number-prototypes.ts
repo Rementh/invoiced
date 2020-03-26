@@ -29,7 +29,20 @@ Number.prototype.toRounded = function(precision = 2) {
 Number.prototype.toCurrency = function({ prefix, suffix, precision } = {}) {
     return (
         (prefix ? `${prefix}` : '') +
-        this.toRounded(precision).replace('.', ',') +
+        this.toRounded(precision)
+            .replace('.', ',')
+            .split(',')
+            .map((item: string, index: number) =>
+                /* insert spaces every 3 digits of base number */
+                index === 0
+                    ? item
+                          .reverse()
+                          .replace(/(\d{3})/g, '$1 ')
+                          .reverse()
+                    : item,
+            )
+            .join(',')
+            .trim() +
         (suffix ? `${suffix}` : '')
     );
 };

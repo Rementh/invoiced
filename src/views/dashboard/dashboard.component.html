@@ -1,5 +1,7 @@
 <async-button
     label="Generate PDF"
     [job]="prepareEntryInvoiceData"
-    (done)="generatePdf($event)"
+    (success)="generatePdf($event)"
 ></async-button>
+
+<async-button label="Logout" [job]="logout"></async-button>

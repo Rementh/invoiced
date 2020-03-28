@@ -80,6 +80,10 @@
                         "tsConfig": ["tsconfig.app.json"],
                         "exclude": ["**/node_modules/**"]
                     }
+                },
+                "deploy": {
+                    "builder": "@angular/fire:deploy",
+                    "options": {}
                 }
             }
         }

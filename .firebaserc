@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "invoiced-app"
+  },
+  "targets": {
+    "invoiced-app": {
+      "hosting": {
+        "invoiced": [
+          "invoiced-app"
+        ]
+      }
+    }
   }
 }

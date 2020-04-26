@@ -1,0 +1,20 @@
+@import '../../assets/theme.scss';
+
+:host {
+    display: flex;
+    flex-direction: column;
+}
+
+.control {
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    caret-color: $color-text;
+    border-bottom: 1px solid $color-text;
+    padding: 0.4rem 0;
+}
+
+.control[type='password'] {
+    letter-spacing: 4px;
+}

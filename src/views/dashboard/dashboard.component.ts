@@ -29,7 +29,7 @@ export default class DashboardComponent {
         const dateOfIssue = new Date();
 
         return from(getCurrencyRate(currency, dateOfIssue)).pipe(
-            map(exchangeRate => ({
+            map((exchangeRate) => ({
                 placeOfIssue: 'Bielsko-Biała',
                 dateOfIssue,
                 seller: {
@@ -50,12 +50,12 @@ export default class DashboardComponent {
                         postCode: '13-200',
                     },
                 },
-                invoiceNumber: 2,
+                invoiceNumber: 1,
                 products: [
                     {
                         name: 'Usługa programistyczna',
                         unit: 'godz.',
-                        quantity: 104,
+                        quantity: 200,
                         unitNetValue: 26,
                         taxRate: 0.23,
                     },

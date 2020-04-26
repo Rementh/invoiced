@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { AuthService } from 'src/services/auth.service';
 import { Router } from '@angular/router';
 
-interface LoginResponse {
-    error?: firebase.auth.Error;
+interface LoginForm {
+    login: string;
+    password: string;
 }
 
 @Component({
@@ -14,7 +15,13 @@ interface LoginResponse {
 export default class LoginComponent {
     constructor(private authService: AuthService, private router: Router) {}
 
-    login = () => this.authService.login('_', '_');
+    login = ({ login, password }: LoginForm) => () =>
+        this.authService.login(login, password);
 
     navigateToApp = () => this.router.navigate(['/']);
+
+    handleLoginError = error => {
+        // TODO replace with notification service when implemented
+        console.log(error);
+    };
 }

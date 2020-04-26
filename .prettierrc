@@ -4,5 +4,6 @@
     "trailingComma": "all",
     "useTabs": false,
     "tabWidth": 4,
-    "maxWidth": 140
+    "maxWidth": 140,
+    "arrowParens": "avoid"
 }

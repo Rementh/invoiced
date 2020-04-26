@@ -1,8 +1,10 @@
+@import '../../assets/theme.scss';
+
 /* Consts */
 $transition-time: 200ms;
 $instant-start: cubic-bezier(0, 0.5, 0.5, 1);
 $delayed-start: cubic-bezier(0.5, 0, 1, 0.5);
-$button-color: #263238;
+$button-color: $color-primary;
 $text-color: #fff;
 $size: 48px;
 $border: 4px;

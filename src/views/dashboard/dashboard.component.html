@@ -1,7 +1,9 @@
-<async-button
-    label="Generate PDF"
-    [job]="prepareEntryInvoiceData"
-    (success)="generatePdf($event)"
-></async-button>
+<div class="card">
+    <async-button
+        label="Generate PDF"
+        [job]="prepareEntryInvoiceData"
+        (success)="generatePdf($event)"
+    ></async-button>
 
-<async-button label="Logout" [job]="logout"></async-button>
+    <async-button label="Logout" [job]="logout"></async-button>
+</div>

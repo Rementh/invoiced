@@ -29,7 +29,7 @@ export default class DashboardComponent {
         const dateOfIssue = new Date();
 
         return from(getCurrencyRate(currency, dateOfIssue)).pipe(
-            map((exchangeRate) => ({
+            map(exchangeRate => ({
                 placeOfIssue: 'Bielsko-Biała',
                 dateOfIssue,
                 seller: {

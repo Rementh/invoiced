@@ -3,26 +3,31 @@ import { AngularFireAuth } from '@angular/fire/auth';
 import { Observable, from } from 'rxjs';
 import { CanActivate, Router } from '@angular/router';
 import { map, tap } from 'rxjs/operators';
-import { User } from 'src/models/auth';
+import { User, UserCredential } from 'src/models/auth';
 import 'firebase/auth';
 
 @Injectable({
     providedIn: 'root',
 })
 export class AuthService implements CanActivate {
+    private currentUser: User;
+
     constructor(private auth: AngularFireAuth, private router: Router) {}
 
-    login = (email: string, password: string): Observable<User> =>
+    public login = (email: string, password: string): Observable<UserCredential> =>
         from(this.auth.signInWithEmailAndPassword(email, password));
 
-    logout = (): Observable<void> =>
-        from(this.auth.signOut()).pipe(
-            tap(() => this.router.navigate(['/login'])),
+    public logout = (): Observable<void> =>
+        from(this.auth.signOut()).pipe(tap(() => this.router.navigate(['/login'])));
+
+    public canActivate = (): Observable<boolean> =>
+        this.auth.authState.pipe(
+            tap(user => (this.currentUser = user)),
+            map(user => !!user),
+            tap(canActivate => canActivate || this.router.navigate(['/login'])),
         );
 
-    canActivate = (): Observable<boolean> =>
-        this.auth.authState.pipe(
-            map(user => !!user),
-            tap(res => res || this.router.navigate(['/login'])),
-        );
+    public get user() {
+        return this.currentUser;
+    }
 }

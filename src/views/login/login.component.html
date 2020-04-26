@@ -1,5 +1,12 @@
-<async-button
-    label="Login"
-    [job]="login"
-    (success)="navigateToApp()"
-></async-button>
+<div class="title"><h1>Invoiced</h1></div>
+
+<form #loginForm="ngForm" class="login-form">
+    <text-field name="login" ngModel></text-field>
+    <text-field name="password" type="password" ngModel></text-field>
+    <async-button
+        label="Login"
+        [job]="login(loginForm.value)"
+        (success)="navigateToApp()"
+        (error)="handleLoginError($event)"
+    ></async-button>
+</form>

@@ -29,12 +29,7 @@ import LoginComponent from './views/login/login.component';
         DashboardComponent,
         LoginComponent,
     ],
-    imports: [
-        BrowserModule,
-        RoutingModule,
-        FormsModule,
-        AngularFireModule.initializeApp(config),
-    ],
+    imports: [BrowserModule, RoutingModule, FormsModule, AngularFireModule.initializeApp(config)],
     providers: [],
     bootstrap: [AppComponent],
 })
